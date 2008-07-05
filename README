@@ -1,0 +1,2 @@
+This Rails plugin could be used to make all, or some specific finder methods reads data from the slaves 
+while performing all writes and reads for new data from the master server.
