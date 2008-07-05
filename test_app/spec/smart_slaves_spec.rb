@@ -36,7 +36,7 @@ describe SmartSlaves, "with use_smart_slaves" do
   extend SmartSlavesHelper
   define_test_model :db => :slave
   
-  before(:all) do
+  before(:each) do
     puts "-----------------------------------------------------------------"
   end
 
