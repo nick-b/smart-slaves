@@ -9,3 +9,8 @@ test:
     adapter: sqlite3
     database: db/slave.sqlite3
     timeout: 5000
+
+test_slave:
+  adapter: sqlite3
+  database: db/slave.sqlite3
+  timeout: 5000
