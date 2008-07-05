@@ -1,3 +1,3 @@
 if defined? ActiveRecord::Base
-  require 'smart_slaves'
+  require File.dirname(__FILE__) + '/lib/smart_slaves.rb'
 end
