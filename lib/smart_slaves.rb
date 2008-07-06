@@ -97,7 +97,7 @@ module SmartSlaves
       def find(*args)
         options = args.last.is_a?(Hash) ? args.last : {}
         options = cleanup_options(options)
-        return super if [:first, :last, :all].include?(args.first)
+        return run_on_default { super } if [:first, :last, :all].include?(args.first)
         
         ids = args.last.is_a?(Hash) ? args[0..-2] : args
         
@@ -135,6 +135,10 @@ module SmartSlaves
 
       def run_on_slave
         run_on_connection(slave_connection) { yield }
+      end
+
+      def run_on_default
+        run_on_connection(default_connection) { yield }
       end
       
     private

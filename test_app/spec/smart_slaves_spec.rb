@@ -34,11 +34,13 @@ describe SmartSlaves do
     
     define_test_model :slave_db => :slave, :default_finder => :master
     SmartSlaveTest.find(5).name.should == "test5"
+    SmartSlaveTest.find(:first, :conditions => { :id => 5 }).name.should == "test5"
 
     define_test_model :slave_db => :slave, :default_finder => :slave
     lambda {
       SmartSlaveTest.find(5)
     }.should raise_error(ActiveRecord::RecordNotFound)
+    SmartSlaveTest.find(:first, :conditions => { :id => 5 }).should be_nil
   end
 end
 
