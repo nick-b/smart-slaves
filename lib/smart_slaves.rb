@@ -71,25 +71,15 @@ module SmartSlaves
     end
     
     module FinderClassOverrides
-      def find(*opts)
-        slave_options = opts.last.kind_of?(Hash) ? opts.pop : {}
-        conn = choose_connection_by_ids(opts, slave_options)
-        run_on_connection(conn) { super }
-      end
-      
-    private
-    
-      def choose_connection_by_ids(ids, slave_options)
-        puts "Choosing connection by IDS(#{ids.inspect})"
-        return master_connection if slave_options[:on_master]
+      def find(*args)
+        return super if [:first, :last, :all].include?(args.first)
         
-        ids = [ids].flatten
-        ids.each do |rec_id|
-          return master_connection if above_checkpoint?(rec_id)
-        end
-        return slave_connection
+        options = args.last.is_a?(Hash) ? args.last : {}
+        ids = args.last.is_a?(Hash) ? args[0..-2] : args
+        
+        run_smart_by_ids(ids, options) { super }
       end
-      
+
       def master_connection
         connection
       end
@@ -97,17 +87,7 @@ module SmartSlaves
       def slave_connection
         slave_class.connection
       end
-      
-      def above_checkpoint?(id)
-        self.checkpoint_value ||= find_checkpoint_value
-        puts "AboveCheckpoint? : #{id} > #{self.checkpoint_value}"
-        id > checkpoint_value
-      end
 
-      def find_checkpoint_value
-        run_on_connection(slave_connection) { maximum(primary_key) }
-      end
-      
       def run_on_connection(con)
         puts "Running a query on connection ##{con.object_id}"
         klass_conn = self.connection
@@ -120,6 +100,43 @@ module SmartSlaves
           self.clear_active_connection_name
         end
       end
+      
+      def run_on_master
+        run_on_connection(master_connection) { yield }
+      end
+
+      def run_on_slave
+        run_on_connection(slave_connection) { yield }
+      end
+      
+    private
+
+      def run_smart_by_ids(ids, options = {})
+        conn = choose_connection_by_ids(ids, options)
+        run_on_connection(conn) { yield }
+      end
+    
+      def choose_connection_by_ids(ids, slave_options)
+        puts "Choosing connection by IDS(#{ids.inspect})"
+        return master_connection if slave_options[:on_master]
+        
+        ids = [ids].flatten
+        ids.each do |rec_id|
+          return master_connection if above_checkpoint?(rec_id)
+        end
+        return slave_connection
+      end
+      
+      def above_checkpoint?(id)
+        self.checkpoint_value ||= find_checkpoint_value
+        puts "AboveCheckpoint? : #{id} > #{self.checkpoint_value}"
+        id > checkpoint_value
+      end
+
+      def find_checkpoint_value
+        run_on_slave { maximum(primary_key) }
+      end
+      
     end
   end
 end

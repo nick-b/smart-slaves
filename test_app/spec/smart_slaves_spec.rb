@@ -16,9 +16,9 @@ module SmartSlavesHelper
   
   def load_fixtures_data
     SmartSlaveTestOnSlave.connection.execute("DELETE FROM smart_slave_tests")
-    create_fixture_record(SmartSlaveTestOnSlave, :name => 'test1', :id => 1)
-    create_fixture_record(SmartSlaveTestOnSlave, :name => 'test2', :id => 2)
-    create_fixture_record(SmartSlaveTestOnSlave, :name => 'test3', :id => 3)
+    create_fixture_record(SmartSlaveTestOnSlave, :name => 'slave_test1', :id => 1)
+    create_fixture_record(SmartSlaveTestOnSlave, :name => 'slave_test2', :id => 2)
+    create_fixture_record(SmartSlaveTestOnSlave, :name => 'slave_test3', :id => 3)
 
     SmartSlaveTest.connection.execute("DELETE FROM smart_slave_tests")
     create_fixture_record(SmartSlaveTest, :name => 'test1', :id => 1)
@@ -67,5 +67,15 @@ describe SmartSlaves, "with use_smart_slaves" do
     SmartSlaveTest.send(:checkpoint_value).should be_nil
     SmartSlaveTest.find(5).name.should == "test5"
     SmartSlaveTest.send(:checkpoint_value).should be(3)
-  end  
+  end
+  
+  it "should do finds on an appropriate servers (based on id)" do
+    SmartSlaveTest.find(2).name.should == "slave_test2"
+    SmartSlaveTest.find(3).name.should == "slave_test3"
+    SmartSlaveTest.find(4).name.should == "test4"
+  end
+  
+  it "should support conditioned find calls" do
+    SmartSlaveTest.find(:first, :conditions => { :id => 2 }) #.name.should == "slave_test2"
+  end
 end
