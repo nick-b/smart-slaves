@@ -129,7 +129,19 @@ describe SmartSlaves, "with use_smart_slaves:" do
     it "should honor :on_slave option" do
       sql = "SELECT * FROM smart_slave_tests WHERE name='slave_test1'"
       SmartSlaveTest.find_by_sql(sql, :on_slave => true).first.id.should == 1
-    end  
+    end
+    
+    describe "should support dynamic methods:" do
+      it "find_by_field_name" do
+        SmartSlaveTest.find_by_name("test1", :on_master => true).id.should == 1
+        SmartSlaveTest.find_by_name("slave_test1", :on_slave => true).id.should == 1
+      end
+
+      it "find_all_by_field_name" do
+        SmartSlaveTest.find_all_by_name("test1", :on_master => true).first.id.should == 1
+        SmartSlaveTest.find_all_by_name("slave_test1", :on_slave => true).first.id.should == 1
+      end
+    end
   end
 
 end
