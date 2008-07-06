@@ -72,9 +72,10 @@ module SmartSlaves
     
     module FinderClassOverrides
       def find(*args)
+        options = args.last.is_a?(Hash) ? args.last : {}
+        options = cleanup_options(options)
         return super if [:first, :last, :all].include?(args.first)
         
-        options = args.last.is_a?(Hash) ? args.last : {}
         ids = args.last.is_a?(Hash) ? args[0..-2] : args
         
         run_smart_by_ids(ids, options) { super }
@@ -111,6 +112,15 @@ module SmartSlaves
       
     private
 
+      def cleanup_options(options)
+        slave_options = {}
+
+        slave_options[:on_master] = options.delete(:on_master)
+        slave_options[:on_slave] = options.delete(:on_slave)
+
+        return slave_options
+      end
+
       def run_smart_by_ids(ids, options = {})
         conn = choose_connection_by_ids(ids, options)
         run_on_connection(conn) { yield }
@@ -118,7 +128,9 @@ module SmartSlaves
     
       def choose_connection_by_ids(ids, slave_options)
         puts "Choosing connection by IDS(#{ids.inspect})"
+
         return master_connection if slave_options[:on_master]
+        return slave_connection if slave_options[:on_slave]
         
         ids = [ids].flatten
         ids.each do |rec_id|
