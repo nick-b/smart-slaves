@@ -42,6 +42,7 @@ module SmartSlaves
     end
 
     def checkpoint_value=(value)
+      puts "Setting checkpoint for #{self} to #{value}"
       SMART_SLAVES_CHECKPOINTS[self] = value
     end
   
@@ -104,6 +105,12 @@ module SmartSlaves
         run_smart_by_ids(ids, options) { super }
       end
 
+      def calculate(operation, column_name, options = {})
+        return run_on_master { super } if options.delete(:on_master)
+        return run_on_slave { super } if options.delete(:on_slave)
+        run_on_default { super }
+      end
+
       def master_connection
         master_class.connection
       end
@@ -164,9 +171,12 @@ module SmartSlaves
         return slave_connection if slave_options[:on_slave]
         
         ids = [ids].flatten
+        puts "...based on PK ids: #{ids.inspect}"
         ids.each do |rec_id|
           return default_connection if above_checkpoint?(rec_id)
         end
+        
+        puts "Slave connection selected"
         return slave_connection
       end
       
@@ -177,7 +187,7 @@ module SmartSlaves
       end
 
       def find_checkpoint_value
-        run_on_slave { maximum(primary_key) }
+        maximum(primary_key, :on_slave => true)
       end
       
     end
