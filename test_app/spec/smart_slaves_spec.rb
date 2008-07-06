@@ -33,21 +33,21 @@ end
 describe SmartSlaves do
   include SmartSlavesHelper
   
-  it "should raise an exception if no :db parameter passed" do
+  it "should raise an exception if no :slave_db parameter passed" do
     lambda {
       define_test_model
     }.should raise_error
   end
   
-  it "should raise and exception if invalid :db parameter passed" do
+  it "should raise and exception if invalid :slave_db parameter passed" do
     lambda {
-      define_test_model :db => :crap
+      define_test_model :slave_db => :crap
     }.should raise_error
   end
 
   it "should not raise and exception if all params are valid" do
     lambda {
-      define_test_model :db => :slave
+      define_test_model :slave_db => :slave
     }.should_not raise_error
   end
 end
@@ -55,7 +55,7 @@ end
 
 describe SmartSlaves, "with use_smart_slaves" do
   extend SmartSlavesHelper
-  define_test_model :db => :slave
+  define_test_model :slave_db => :slave
 
   load_fixtures_data
 
