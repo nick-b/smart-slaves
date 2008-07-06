@@ -16,14 +16,10 @@ module SmartSlaves
 
       params[:default_finder] ||= :master
       
-      params[:master_class] = generate_ar_class(params[:master_db]) if params[:master_db]
-      params[:slave_class] = generate_ar_class(params[:slave_db])
+      self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
+      self.slave_class = generate_ar_class(params[:slave_db])
+      self.default_class = (params[:default_finder] == :master) ? self.master_class : self.slave_class
 
-      params[:master_class] ||= self
-
-      self.master_class = params[:master_class]
-      self.slave_class = params[:slave_class]
-      self.default_class = params[:default_finder] == :master ? self.master_class : self.slave_class
       self.checkpoint_value = nil
       
       self.extend(FinderClassOverrides)
