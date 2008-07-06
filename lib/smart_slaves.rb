@@ -1,10 +1,5 @@
 module ActiveRecord; module Acts; end; end 
 
-SMART_SLAVES_SLAVE_CLASSES = {}
-SMART_SLAVES_MASTER_CLASSES = {}
-SMART_SLAVES_DEFAULT_CLASSES = {}
-SMART_SLAVES_CHECKPOINTS = {}
-
 module SmartSlaves
   def self.included(base)
     base.extend(ClassMethods)
@@ -16,13 +11,15 @@ module SmartSlaves
 
       params[:default_finder] ||= :master
       
-      self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
-      self.slave_class = generate_ar_class(params[:slave_db])
-      self.default_class = (params[:default_finder] == :master) ? self.master_class : self.slave_class
+      options = {}
+      options[:master_class] = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
+      options[:slave_class] = generate_ar_class(params[:slave_db])
+      options[:default_class] = (params[:default_finder] == :master) ? options[:master_class] : options[:slave_class]
 
-      self.checkpoint_value = nil
+      options[:checkpoint] = nil
       
       self.extend(FinderClassOverrides)
+      @@options = options
     end
 
     alias_method :use_smart_slave, :use_smart_slaves
@@ -30,36 +27,36 @@ module SmartSlaves
   protected
     
     def slave_class=(value)
-      SMART_SLAVES_SLAVE_CLASSES[self] = value
+      @@options[:slave_class] = value
     end
 
     def master_class=(value)
-      SMART_SLAVES_MASTER_CLASSES[self] = value
+      @@options[:master_class] = value
     end
 
     def default_class=(value)
-      SMART_SLAVES_DEFAULT_CLASSES[self] = value
+      @@options[:default_class] = value
     end
 
     def checkpoint_value=(value)
       puts "Setting checkpoint for #{self} to #{value}"
-      SMART_SLAVES_CHECKPOINTS[self] = value
+      @@options[:checkpoint] = value
     end
   
     def slave_class
-      SMART_SLAVES_SLAVE_CLASSES[self]
+      @@options[:slave_class]
     end
 
     def master_class
-      SMART_SLAVES_MASTER_CLASSES[self]
+      @@options[:master_class]
     end
 
     def default_class
-      SMART_SLAVES_DEFAULT_CLASSES[self]
+      @@options[:default_class]
     end
 
     def checkpoint_value
-      SMART_SLAVES_CHECKPOINTS[self]
+      @@options[:checkpoint]
     end
 
     def check_params(params)
