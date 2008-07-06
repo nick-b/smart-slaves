@@ -2,6 +2,7 @@ module ActiveRecord; module Acts; end; end
 
 SMART_SLAVES_SLAVE_CLASSES = {}
 SMART_SLAVES_MASTER_CLASSES = {}
+SMART_SLAVES_DEFAULT_CLASSES = {}
 SMART_SLAVES_CHECKPOINTS = {}
 
 module SmartSlaves
@@ -13,14 +14,16 @@ module SmartSlaves
     def use_smart_slaves(params = {})
       check_params(params)
 
+      params[:default_finder] ||= :master
+      
       params[:master_class] = generate_ar_class(params[:master_db]) if params[:master_db]
-      params[:slave_class] = generate_ar_class(params[:slave_db]) if params[:slave_db]
+      params[:slave_class] = generate_ar_class(params[:slave_db])
 
-      params[:master_class] ||= ActiveRecord::Base
-      params[:slave_class] ||= ActiveRecord::Base
+      params[:master_class] ||= self
 
       self.master_class = params[:master_class]
       self.slave_class = params[:slave_class]
+      self.default_class = params[:default_finder] == :master ? self.master_class : self.slave_class
       self.checkpoint_value = nil
       
       self.extend(FinderClassOverrides)
@@ -38,6 +41,10 @@ module SmartSlaves
       SMART_SLAVES_MASTER_CLASSES[self] = value
     end
 
+    def default_class=(value)
+      SMART_SLAVES_DEFAULT_CLASSES[self] = value
+    end
+
     def checkpoint_value=(value)
       SMART_SLAVES_CHECKPOINTS[self] = value
     end
@@ -48,6 +55,10 @@ module SmartSlaves
 
     def master_class
       SMART_SLAVES_MASTER_CLASSES[self]
+    end
+
+    def default_class
+      SMART_SLAVES_DEFAULT_CLASSES[self]
     end
 
     def checkpoint_value
@@ -65,6 +76,10 @@ module SmartSlaves
       
       if params[:master_db] && !ActiveRecord::Base.configurations[RAILS_ENV][params[:master_db].to_s]
         raise "No '#{params[:master_db]}' server defined in database.yml!"
+      end
+      
+      if params[:default_finder] && ![:master, :slave].include?(params[:default_finder])
+        raise ":default_finder should be either :master (default value) or :slave"
       end
     end
     
@@ -99,6 +114,10 @@ module SmartSlaves
       
       def slave_connection
         slave_class.connection
+      end
+
+      def default_connection
+        default_class.connection
       end
 
       def run_on_connection(con)
@@ -146,7 +165,7 @@ module SmartSlaves
         
         ids = [ids].flatten
         ids.each do |rec_id|
-          return master_connection if above_checkpoint?(rec_id)
+          return default_connection if above_checkpoint?(rec_id)
         end
         return slave_connection
       end

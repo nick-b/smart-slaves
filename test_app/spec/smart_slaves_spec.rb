@@ -45,6 +45,12 @@ describe SmartSlaves do
     }.should raise_error
   end
 
+  it "should raise and exception if invalid :default_finder parameter passed" do
+    lambda {
+      define_test_model :default_finder => :crap, :slave_db => :slave
+    }.should raise_error
+  end
+
   it "should not raise and exception if all params are valid" do
     lambda {
       define_test_model :slave_db => :slave
