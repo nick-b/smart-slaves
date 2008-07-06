@@ -11,15 +11,14 @@ module SmartSlaves
 
       params[:default_finder] ||= :master
       
-      options = {}
-      options[:master_class] = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
-      options[:slave_class] = generate_ar_class(params[:slave_db])
-      options[:default_class] = (params[:default_finder] == :master) ? options[:master_class] : options[:slave_class]
+      @@options = {}
+      self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
+      self.slave_class = generate_ar_class(params[:slave_db])
+      self.default_class = (params[:default_finder] == :master) ? self.master_class : self.slave_class
 
-      options[:checkpoint] = nil
+      self.checkpoint_value = nil
       
       self.extend(FinderClassOverrides)
-      @@options = options
     end
 
     alias_method :use_smart_slave, :use_smart_slaves
@@ -40,7 +39,7 @@ module SmartSlaves
 
     def checkpoint_value=(value)
       puts "Setting checkpoint for #{self} to #{value}"
-      @@options[:checkpoint] = value
+      @@options[:checkpoint_value] = value
     end
   
     def slave_class
@@ -56,7 +55,7 @@ module SmartSlaves
     end
 
     def checkpoint_value
-      @@options[:checkpoint]
+      @@options[:checkpoint_value]
     end
 
     def check_params(params)
