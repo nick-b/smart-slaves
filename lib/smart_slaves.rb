@@ -5,18 +5,20 @@ module SmartSlaves
     base.extend(ClassMethods)
   end
 
-  module ClassMethods    
+  module ClassMethods
+    attr_accessor :slave_class
+    attr_accessor :master_class
+    attr_accessor :default_class
+    attr_accessor :checkpoint_value
+    
     def use_smart_slaves(params = {})
       check_params(params)
 
       params[:default_finder] ||= :master
       
-      @@options = {}
       self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
       self.slave_class = generate_ar_class(params[:slave_db])
       self.default_class = (params[:default_finder] == :master) ? self.master_class : self.slave_class
-
-      self.checkpoint_value = nil
       
       self.extend(FinderClassOverrides)
     end
@@ -24,39 +26,6 @@ module SmartSlaves
     alias_method :use_smart_slave, :use_smart_slaves
 
   protected
-    
-    def slave_class=(value)
-      @@options[:slave_class] = value
-    end
-
-    def master_class=(value)
-      @@options[:master_class] = value
-    end
-
-    def default_class=(value)
-      @@options[:default_class] = value
-    end
-
-    def checkpoint_value=(value)
-      puts "Setting checkpoint for #{self} to #{value}"
-      @@options[:checkpoint_value] = value
-    end
-  
-    def slave_class
-      @@options[:slave_class]
-    end
-
-    def master_class
-      @@options[:master_class]
-    end
-
-    def default_class
-      @@options[:default_class]
-    end
-
-    def checkpoint_value
-      @@options[:checkpoint_value]
-    end
 
     def check_params(params)
       unless params[:slave_db]
