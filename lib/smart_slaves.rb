@@ -18,7 +18,7 @@ module SmartSlaves
       
       self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
       self.slave_class = generate_ar_class(params[:slave_db])
-      self.default_class = (params[:default_finder] == :master) ? self.master_class : self.slave_class
+      self.default_class = (params[:default_finder] == :master) ? master_class : slave_class
       
       self.extend(FinderClassOverrides)
     end
