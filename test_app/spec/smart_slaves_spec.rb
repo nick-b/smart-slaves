@@ -119,4 +119,17 @@ describe SmartSlaves, "with use_smart_slaves:" do
       end
     end
   end
+  
+  describe "find_by_sql and construct_finder_sql methods overrides" do
+    it "should honor :on_master option" do
+      sql = "SELECT * FROM smart_slave_tests WHERE name='test1'"
+      SmartSlaveTest.find_by_sql(sql, :on_master => true).first.id.should == 1
+    end
+
+    it "should honor :on_slave option" do
+      sql = "SELECT * FROM smart_slave_tests WHERE name='slave_test1'"
+      SmartSlaveTest.find_by_sql(sql, :on_slave => true).first.id.should == 1
+    end  
+  end
+
 end
