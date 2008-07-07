@@ -78,6 +78,8 @@ describe SmartSlaves, "with use_smart_slaves:" do
       SmartSlaveTest.find(:first, :conditions => { :id => 5 }).name.should == "test5"
       SmartSlaveTest.find(:all, :conditions => { :id => [1, 2] }).collect(&:name).should == ["slave_test1", "slave_test2" ]
       SmartSlaveTest.find(:all, :conditions => { :id => [3, 4] }).collect(&:name).should == ["test3", "test4" ]
+      SmartSlaveTest.find(:all, :conditions => { :id => 1..3 }).collect(&:name).should == ["slave_test1", "slave_test2", "slave_test3"]
+      SmartSlaveTest.find(:all, :conditions => { :id => 2..4 }).collect(&:name).should == ["test2", "test3", "test4" ]
     end
   
     it "should run find on the master when :on_master => true is in the options" do

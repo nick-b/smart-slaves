@@ -67,7 +67,7 @@ module SmartSlaves
         
         if [:first, :last, :all].include?(args.first)
           puts "Complex find: #{args.inspect}. Conditions class = #{options[:conditions][primary_key.to_sym].class}"
-          if options[:conditions] && options[:conditions][primary_key.to_sym] && [Array, Fixnum].include?(options[:conditions][primary_key.to_sym].class)
+          if options[:conditions] && options[:conditions][primary_key.to_sym] && [Array, Fixnum, Range].include?(options[:conditions][primary_key.to_sym].class)
             puts "Run in optimized way for ids = #{options[:conditions][primary_key.to_sym].inspect}"
             return run_smart_by_ids(options[:conditions][primary_key.to_sym], options) { super }
           end
@@ -166,7 +166,7 @@ module SmartSlaves
         return master_connection if slave_options[:on_master]
         return slave_connection if slave_options[:on_slave]
         
-        ids = [ids].flatten
+        ids = ids.is_a?(Range) ? ids.to_a : [ids].flatten
         puts "...based on PK ids: #{ids.inspect}"
         ids.each do |rec_id|
           return default_connection if above_checkpoint?(rec_id)
