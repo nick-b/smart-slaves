@@ -166,7 +166,7 @@ module SmartSlaves
         return master_connection if slave_options[:on_master]
         return slave_connection if slave_options[:on_slave]
         
-        ids = ids.is_a?(Range) ? ids.to_a : [ids].flatten
+        ids = [*ids]
         puts "...based on PK ids: #{ids.inspect}"
         ids.each do |rec_id|
           return default_connection if above_checkpoint?(rec_id)
