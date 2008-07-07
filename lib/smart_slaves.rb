@@ -19,6 +19,7 @@ module SmartSlaves
       self.master_class = (params[:master_db]) ? generate_ar_class(params[:master_db]) : ActiveRecord::Base
       self.slave_class = generate_ar_class(params[:slave_db])
       self.default_class = (params[:default_finder] == :master) ? master_class : slave_class
+      in_a_smart_block!(false)
       
       self.extend(FinderClassOverrides)
     end
@@ -26,7 +27,15 @@ module SmartSlaves
     alias_method :use_smart_slave, :use_smart_slaves
 
   protected
+    
+    def in_a_smart_block!(is)
+      @in_a_smart_block = is
+    end
 
+    def in_a_smart_block?
+      @in_a_smart_block
+    end
+  
     def check_params(params)
       unless params[:slave_db]
         raise "Invalid or no :slave_db parameter passed!"
@@ -63,7 +72,6 @@ module SmartSlaves
       def find(*args)
         args << {} unless args.last.is_a?(Hash)
         options = args.last
-        options[:smart_slaves] = true
         
         if [:first, :last, :all].include?(args.first)
           puts "Complex find: #{args.inspect}. Conditions class = #{options[:conditions][primary_key.to_sym].class}"
@@ -87,7 +95,7 @@ module SmartSlaves
         options.merge(:sql => super)
       end
 
-      def find_by_sql(sql, options = nil) 
+      def find_by_sql(sql, options = {}) 
         # Called through construct_finder_sql
         if sql.is_a?(Hash)
           options = sql
@@ -96,7 +104,7 @@ module SmartSlaves
 
         run_on_db(options) { super(sql) }
       end
-      
+
       def run_on_master
         puts "Running a query on master connection"
         run_on_connection(master_connection) { yield }
@@ -106,25 +114,24 @@ module SmartSlaves
         puts "Running a query on slave connection"
         run_on_connection(slave_connection) { yield }
       end
-
-      def run_on_default
-        puts "Running a query on default connection"
-        run_on_connection(default_connection) { yield }
-      end
       
     private
 
       VALID_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset,
                              :order, :select, :readonly, :group, :from, :lock, 
-                             :on_slave, :on_master, :smart_slaves ]
+                             :on_slave, :on_master ]
 
       def validate_find_options(options)
         options.assert_valid_keys(VALID_FIND_OPTIONS)
       end
 
-      def run_on_db(options)
+      def run_on_default
+        puts "Running a query on default connection"
+        run_on_connection(default_connection) { yield }
+      end
+
+      def run_on_db(options = {})
         puts "run_on_db(#{options.inspect})"
-        return yield if options.delete(:smart_slaves)
         return run_on_master { yield } if options.delete(:on_master)
         return run_on_slave { yield } if options.delete(:on_slave)
         run_on_default { yield }
@@ -144,19 +151,21 @@ module SmartSlaves
       end
 
       def default_connection
-        default_class.connection
+        in_a_smart_block? ? self.connection : default_class.connection
       end
 
       def run_on_connection(con)
         puts "Running a query on connection ##{con.object_id}"
         klass_conn = self.connection
         begin
+          in_a_smart_block!(true)
           self.connection = con
           self.clear_active_connection_name
           yield
         ensure
           self.connection = klass_conn
           self.clear_active_connection_name
+          in_a_smart_block!(false)
         end
       end
     

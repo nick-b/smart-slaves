@@ -156,7 +156,7 @@ describe SmartSlaves, "with use_smart_slaves:" do
     end
 
     it "run_on_slave should force all queries to be performed on the slave" do
-      SmartSlaveTest.run_on_master do
+      SmartSlaveTest.run_on_slave do
         sql = "SELECT * FROM smart_slave_tests WHERE id = 1"
         SmartSlaveTest.find_by_sql(sql).first.name.should == "slave_test1"
       end
