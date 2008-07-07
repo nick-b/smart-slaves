@@ -161,5 +161,17 @@ describe SmartSlaves, "with use_smart_slaves:" do
         SmartSlaveTest.find_by_sql(sql).first.name.should == "slave_test1"
       end
     end
+    
+    it "should support multi-level run_on_* blocks" do
+      sql = "SELECT * FROM smart_slave_tests WHERE id = 1"
+      SmartSlaveTest.run_on_master do
+        SmartSlaveTest.find_by_sql(sql).first.name.should == "test1"
+        SmartSlaveTest.run_on_slave do
+          SmartSlaveTest.find_by_sql(sql).first.name.should == "slave_test1"
+        end
+        SmartSlaveTest.find_by_sql(sql).first.name.should == "test1"
+      end
+    end
+    
   end
 end
