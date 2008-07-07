@@ -29,7 +29,7 @@ module SmartSlaves
 
     def check_params(params)
       unless params[:slave_db]
-        raise "Invalid or no :slave_db parameter passed!" 
+        raise "Invalid or no :slave_db parameter passed!"
       end
       
       unless ActiveRecord::Base.configurations[RAILS_ENV][params[:slave_db].to_s]

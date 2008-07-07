@@ -1,9 +1,9 @@
-require File.dirname(__FILE__) + '/spec_helper'
-require File.dirname(__FILE__) + '/../../init'
-require File.dirname(__FILE__) + '/smart_slaves_helper'
+require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../../../init'
+require File.dirname(__FILE__) + '/smart_slave_test_helper'
 
 describe SmartSlaves do
-  include SmartSlavesHelper
+  include SmartSlaveTestHelper
   
   it "should raise an exception if no :slave_db parameter passed" do
     lambda {
@@ -43,7 +43,7 @@ describe SmartSlaves do
 end
 
 describe SmartSlaves, "with use_smart_slaves:" do
-  include SmartSlavesHelper
+  include SmartSlaveTestHelper
   
   before(:each) do
     define_test_model :slave_db => :slave

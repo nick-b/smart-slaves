@@ -37,3 +37,16 @@ Spec::Runner.configure do |config|
   # config.mock_with :flexmock
   # config.mock_with :rr
 end
+
+
+def define_test_model(opts)
+  SmartSlaveTest.class_eval do
+    use_smart_slaves(opts)
+  end
+end
+
+def create_fixture_record(klass, params)
+  rec = klass.new(params)
+  rec.id = params[:id]
+  rec.save
+end

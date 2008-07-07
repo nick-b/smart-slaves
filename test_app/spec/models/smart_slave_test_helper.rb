@@ -1,10 +1,4 @@
-module SmartSlavesHelper
-  def define_test_model(opts)
-    SmartSlaveTest.class_eval do
-      use_smart_slaves(opts)
-    end
-  end
-  
+module SmartSlaveTestHelper
   def create_fixture_record(klass, params)
     rec = klass.new(params)
     rec.id = params[:id]
