@@ -169,7 +169,7 @@ module SmartSlaves
         ids = [*ids]
         puts "...based on PK ids: #{ids.inspect}"
         ids.each do |rec_id|
-          return default_connection if above_checkpoint?(rec_id)
+          return master_connection if above_checkpoint?(rec_id)
         end
         
         puts "Slave connection selected"
