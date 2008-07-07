@@ -29,18 +29,16 @@ describe SmartSlaves do
     }.should_not raise_error
   end
 
-  it "should run find on default server according to :default_finder option" do
+  it "should run find on the slave or the master server ignoring :default_finder option" do
     load_fixtures_data
     
     define_test_model :slave_db => :slave, :default_finder => :master
-    SmartSlaveTest.find(5).name.should == "test5"
-    SmartSlaveTest.find(:first, :conditions => { :id => 5 }).name.should == "test5"
+    SmartSlaveTest.find(1).name.should == "slave_test1"
+    SmartSlaveTest.find(:first, :conditions => { :id => 1 }).name.should == "slave_test1"
 
     define_test_model :slave_db => :slave, :default_finder => :slave
-    lambda {
-      SmartSlaveTest.find(5)
-    }.should raise_error(ActiveRecord::RecordNotFound)
-    SmartSlaveTest.find(:first, :conditions => { :id => 5 }).should be_nil
+    SmartSlaveTest.find(5).name.should == "test5"
+    SmartSlaveTest.find(:first, :conditions => { :id => 5 }).name.should == "test5"
   end
 end
 
