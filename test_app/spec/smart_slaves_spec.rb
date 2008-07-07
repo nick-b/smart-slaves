@@ -74,17 +74,20 @@ describe SmartSlaves, "with use_smart_slaves:" do
     end
   
     it "should support conditioned find calls" do
-      SmartSlaveTest.find(:first, :conditions => { :id => 2 }).should be_valid #.name.should == "slave_test2"
+      SmartSlaveTest.find(:first, :conditions => { :id => 2 }).name.should == "slave_test2"
+      SmartSlaveTest.find(:first, :conditions => { :id => 5 }).name.should == "test5"
+      SmartSlaveTest.find(:all, :conditions => { :id => [1, 2] }).collect(&:name).should == ["slave_test1", "slave_test2" ]
+      SmartSlaveTest.find(:all, :conditions => { :id => [3, 4] }).collect(&:name).should == ["test3", "test4" ]
     end
   
     it "should run find on the master when :on_master => true is in the options" do
       SmartSlaveTest.find(1, :on_master => true).name.should == "test1"
+      SmartSlaveTest.find(:first, :conditions => { :id => 1 }, :on_master => true).name.should == "test1"
     end
 
     it "should run find on the slave when :on_slave => true is in the options" do
-      lambda { 
-        SmartSlaveTest.find(5, :on_slave => true)
-      }.should raise_error(ActiveRecord::RecordNotFound)
+      lambda { SmartSlaveTest.find(5, :on_slave => true) }.should raise_error(ActiveRecord::RecordNotFound)
+      SmartSlaveTest.find(:first, :conditions => { :id => 5 }, :on_slave => true).should be_nil
     end
   end
   

@@ -66,6 +66,12 @@ module SmartSlaves
         options[:smart_slaves] = true
         
         if [:first, :last, :all].include?(args.first)
+          puts "Complex find: #{args.inspect}. Conditions class = #{options[:conditions][primary_key.to_sym].class}"
+          if options[:conditions] && options[:conditions][primary_key.to_sym] && [Array, Fixnum].include?(options[:conditions][primary_key.to_sym].class)
+            puts "Run in optimized way for ids = #{options[:conditions][primary_key.to_sym].inspect}"
+            return run_smart_by_ids(options[:conditions][primary_key.to_sym], options) { super }
+          end
+          puts "Run on default"
           return run_on_default { super } 
         end
         
